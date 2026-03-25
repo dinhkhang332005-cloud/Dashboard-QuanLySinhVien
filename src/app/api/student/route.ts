@@ -5,18 +5,30 @@ export async function GET(req:NextRequest){
     const {searchParams} = new URL(req.url)
     const page = Number(searchParams.get('page')||1);
     const limit = Number(searchParams.get("limit")||10);
+    const search = searchParams.get("search")||"";
     const skip = (page-1)*limit;
 
     try{
         const[students,totalStudents] = await Promise.all([
             prisma.student.findMany({
+                where:{
+                    name:{
+                        contains:search,
+                    }
+                },
                 skip:skip,
                 take:limit,
                 orderBy:{
                      id:'desc'
                 }
             }),
-            prisma.student.count(),
+            prisma.student.count({
+                // where: {
+                // name: {
+                // contains: search,
+                // },
+                //         },
+            }),
         ]);
         const totalPage = Math.ceil(totalStudents/limit)
         return NextResponse.json({

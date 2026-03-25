@@ -84,10 +84,13 @@ const StudentListPage = () => {
   const [totalPage,setTotalPage] = useState(1);
   const limit = 10;
 
+  const [firstSearch,setFirstSearch] = useState("")
+
+
   useEffect(()=>{
     const axiosGetStudent = async ()=>{
       try{
-        const response = await studentApi.getStudentPage(currentPage,limit);
+        const response = await studentApi.getStudentPage(currentPage,limit,firstSearch);
         const {data,meta} = response 
         setListStudent(data||[]);
         setTotalPage(meta?.totalPage || 1)
@@ -97,7 +100,9 @@ const StudentListPage = () => {
       }
     }
     axiosGetStudent();
-  },[currentPage])
+  },[currentPage,firstSearch])
+
+
 
   const handelEditClick = ((student:StudentData)=>{
     setEditingStudent(student);
@@ -190,7 +195,7 @@ const renderRow = (item:Student)=>(
       <div className='flex  justify-between'>
         <h1 className='font-semibold text-xl hidden md:block '>All Students</h1>
         <div className='flex flex-col w-full items-center gap-4 md:flex-row md:w-auto'>
-          <Search/>
+          <Search onSearch={(value)=>setFirstSearch(value)}/>
           <div className='flex items-center gap-4'>
             <div className=' w-7 h-7 rounded-full flex items-center justify-center cursor-pointer bg-amber-300 p-2'>
                         <Image src="/filter.webp" alt='' width={20} height={20}  />

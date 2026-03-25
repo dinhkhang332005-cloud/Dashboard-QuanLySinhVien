@@ -27,7 +27,7 @@ export const studentApi = {
     patchStudent: async(id:number,data:Partial<StudentData>)=>{
         return await axiosClient.patch(`/api/student/${id}`,data)
     },
-    getStudentPage: async (page:string,limit:number)=>{
+    getStudentPage: async (page:number,limit:number)=>{
         return axiosClient.get(`/api/student?page=${page}&limit=${limit}`)
     }
 }

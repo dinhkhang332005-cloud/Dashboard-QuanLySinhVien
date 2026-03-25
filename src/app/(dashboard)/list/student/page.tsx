@@ -8,7 +8,7 @@ import { role, studentsData} from '@/lib/data'
 import { studentApi, StudentData } from '@/serviecs/studentApi'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FaEye } from 'react-icons/fa'
 import { FaPencil } from "react-icons/fa6";
 import { MdDelete } from 'react-icons/md'
@@ -78,6 +78,26 @@ const StudentListPage = () => {
 //useState chinh sua
   const [editIsOpen,setEditIsOpen] = useState(false);
   const [editingStudent,setEditingStudent] = useState<StudentData|null>(null)
+
+// Pagination
+  const [currentPage,setCurrentPage] = useState(1);
+  const [totalPage,setTotalPage] = useState(1);
+  const limit = 10;
+
+  useEffect(()=>{
+    const axiosGetStudent = async ()=>{
+      try{
+        const response = await studentApi.getStudentPage(currentPage,limit);
+        const {data,meta} = response 
+        setListStudent(data||[]);
+        setTotalPage(meta?.totalPage || 1)
+      }catch(err){
+          console.error("loi",err);
+          toast.error('Không thể tải danh sách học sinh')
+      }
+    }
+    axiosGetStudent();
+  },[currentPage])
 
   const handelEditClick = ((student:StudentData)=>{
     setEditingStudent(student);
@@ -190,7 +210,11 @@ const renderRow = (item:Student)=>(
       </div>
       {/* bottom */}
       <div>
-        <ListBottom/>
+        <ListBottom
+        currentPage={currentPage}
+        totalPages={totalPage}
+        onPageChange={(page)=>setCurrentPage(page)}
+        />
       </div>
       {/* <CommonModal
         isOpen={isOpen}

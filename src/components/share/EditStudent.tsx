@@ -1,6 +1,6 @@
 
 import { StudentData } from "@/serviecs/studentApi";
-import { StudentForm } from "../StudentForm";
+import { StudentForm } from "../forms/StudentForm";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 
 type StudentEditProps = {

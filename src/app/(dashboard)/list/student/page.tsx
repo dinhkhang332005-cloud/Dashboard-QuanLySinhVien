@@ -2,16 +2,18 @@
 import ListBottom from '@/app/component/ListBottom'
 import Search from '@/app/component/Search'
 import Table from '@/app/component/Table'
-import { StudentForm } from '@/components/StudentForm'
+import { StudentForm } from '@/components/forms/StudentForm'
 // import { CommonModal } from '@/components/ui/Modal'
 import { role, studentsData} from '@/lib/data'
 import { studentApi, StudentData } from '@/serviecs/studentApi'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { FaEye } from 'react-icons/fa'
+import { FaEye, FaSortAmountDown } from 'react-icons/fa'
 import { FaPencil } from "react-icons/fa6";
 import { MdDelete } from 'react-icons/md'
+import { IoIosAddCircleOutline} from "react-icons/io";
+import { IoFilter } from "react-icons/io5";
 // Nhập các component của shadcn ở đầu trang
 import {
   Sheet,
@@ -84,13 +86,17 @@ const StudentListPage = () => {
   const [totalPage,setTotalPage] = useState(1);
   const limit = 10;
 
+  // tim kiem
   const [firstSearch,setFirstSearch] = useState("")
+
+  //Sort
+  const [sort,setSort] = useState("name-asc")
 
 
   useEffect(()=>{
     const axiosGetStudent = async ()=>{
       try{
-        const response = await studentApi.getStudentPage(currentPage,limit,firstSearch);
+        const response = await studentApi.getStudentPage(currentPage,limit,firstSearch,sort);
         const {data,meta} = response 
         setListStudent(data||[]);
         setTotalPage(meta?.totalPage || 1)
@@ -100,7 +106,7 @@ const StudentListPage = () => {
       }
     }
     axiosGetStudent();
-  },[currentPage,firstSearch])
+  },[currentPage,firstSearch,sort])
 
 
 
@@ -197,15 +203,11 @@ const renderRow = (item:Student)=>(
         <div className='flex flex-col w-full items-center gap-4 md:flex-row md:w-auto'>
           <Search onSearch={(value)=>setFirstSearch(value)}/>
           <div className='flex items-center gap-4'>
-            <div className=' w-7 h-7 rounded-full flex items-center justify-center cursor-pointer bg-amber-300 p-2'>
-                        <Image src="/filter.webp" alt='' width={20} height={20}  />
-            </div>
-            <div className=' w-7 h-7 rounded-full flex items-center justify-center cursor-pointer  bg-amber-300 p-2'>
-                        <Image src="/sort.webp" alt='' width={20} height={20}  />
-            </div>
-            <div className=' w-7 h-7 rounded-full flex items-center justify-center cursor-pointer  bg-amber-300 p-2 ' onClick={()=>setIsOpen(true)}>
-                        <Image src="/create.webp" alt='' width={20} height={20}  />
-            </div>
+                        <IoFilter className=' w-7 h-7 rounded-full flex items-center justify-center cursor-pointer  bg-amber-300 p-2'/>
+
+                        <FaSortAmountDown className={` w-7 h-7 rounded-full flex items-center justify-center cursor-pointer bg-amber-300 p-2 ${sort==="name-desc"?"rotate-180 bg-red-500":""}`} onClick={()=>setSort(sort === "name-asc" ? "name-desc" : "name-asc")}/>
+
+                        <IoIosAddCircleOutline className=' w-7 h-7 rounded-full flex items-center justify-center cursor-pointer  bg-amber-300 p-2 ' onClick={()=>setIsOpen(true)}/>
           </div>
         </div>
       </div>
@@ -231,7 +233,7 @@ const renderRow = (item:Student)=>(
        <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent side='right' className='w-[400px] sm:w-[540px] overflow-y-auto'>
         <SheetHeader className='mb-6'>
-          <SheetTitle className='text-2xl font-bold'>Thêm học sinh mới</SheetTitle>
+          <SheetTitle className='flex text-2xl font-bold text-green-500 items-center justify-center '>Thêm học sinh mới</SheetTitle>
         </SheetHeader>
         <StudentForm onSubmit={handleCreat} />
         </SheetContent>

@@ -30,7 +30,7 @@ model Post {
 
 model Student{
   id Int @id @default(autoincrement())
-  studentID String @unique
+  studentID String @unique 
   name String 
   email String @unique
   photo String?

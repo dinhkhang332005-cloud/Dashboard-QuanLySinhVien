@@ -8,7 +8,7 @@ import { role, studentsData} from '@/lib/data'
 import { studentApi, StudentData } from '@/serviecs/studentApi'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { FaEye, FaSortAmountDown } from 'react-icons/fa'
 import { FaPencil } from "react-icons/fa6";
 import { MdDelete } from 'react-icons/md'
@@ -24,6 +24,8 @@ import {
 import { toast } from 'sonner'
 import { StudentDetailSheet } from '@/components/share/Student'
 import { EditingStudent } from '@/components/share/EditStudent'
+import ImportStudent from '@/app/api/student/import/ImportStudent'
+import ExportStudents from '@/app/api/student/export/ExportStudents'
 
 
 type Student ={
@@ -70,7 +72,7 @@ const columns = [
 ]
 
 const StudentListPage = () => {
-  const [listStudent,setListStudent] = useState<Student[]>(studentsData)
+  const [listStudent,setListStudent] = useState<Student[]>([])
   const [isOpen,setIsOpen] = useState(false)
 
   // useState view ho so
@@ -92,21 +94,21 @@ const StudentListPage = () => {
   //Sort
   const [sort,setSort] = useState("name-asc")
 
-
-  useEffect(()=>{
-    const axiosGetStudent = async ()=>{
+  const axiosGetStudent = useCallback(async ()=>{
       try{
         const response = await studentApi.getStudentPage(currentPage,limit,firstSearch,sort);
-        const {data,meta} = response 
+        const {data,meta} = response as any;
         setListStudent(data||[]);
         setTotalPage(meta?.totalPage || 1)
       }catch(err){
           console.error("loi",err);
           toast.error('Không thể tải danh sách học sinh')
       }
-    }
-    axiosGetStudent();
-  },[currentPage,firstSearch,sort])
+    },[currentPage,limit,firstSearch,sort])
+
+  useEffect(()=>{
+   axiosGetStudent();
+  },[axiosGetStudent])
 
 
 
@@ -121,9 +123,10 @@ const StudentListPage = () => {
       const updateList = listStudent.map((item)=>
         item.id===editingStudent.id?respone.data:item
       )
-      setListStudent(updateList)
+      // setListStudent(updateList)
       setEditIsOpen(false)
       toast.success("Thay doi thanh cong")
+      axiosGetStudent()
     }catch(err){
     console.log("Loi cap nhat :",err)
     toast.error("That bai")
@@ -132,8 +135,9 @@ const StudentListPage = () => {
   const handleDelete = async (id:number)=>{
     try{
       await studentApi.deleteStudent(id);
-      setListStudent(listStudent.filter((student)=>{return student.id!==id}))
+      // setListStudent(listStudent.filter((student)=>{return student.id!==id}))
       toast.success("Xóa thành công")
+      axiosGetStudent();
     }catch(err){
       toast.error("xóa thất bại")
     }
@@ -143,10 +147,11 @@ const StudentListPage = () => {
   const handleCreat = async (data:StudentData)=>{
     try{
     const response = await studentApi.postStudent(data);
-    const newStudentFromData = response.data
-    setListStudent([newStudentFromData,...listStudent])
+    const newStudentFromData = response.data;
+    // setListStudent([newStudentFromData,...listStudent])
     setIsOpen(false)
     toast.success("Thêm sinh viên thành công")
+    axiosGetStudent();
     }catch(err){
         toast.error("Thêm mới thất bại");
     }
@@ -162,6 +167,29 @@ const StudentListPage = () => {
       toast.error("Không thể tải thông tin")
     }
   }
+
+  const handleImportExcel = async (excelData: any[]) => {
+    const StudentsToSave =  excelData.map((item)=>({
+        studentID : String(item["Student ID"]||item["studentID"]),
+        name:String(item["Name"]||item["name"]),
+        email:String(item["Email"]||item["email"]),
+        grade: Number(item["Grade"] || item["grade"]),
+        class: String(item["Class"] || item["class"]),
+        phone: String(item["phone"] || ""),
+        address: String(item["address"] || item["address"] || ""),
+    }));
+    try{
+      const response = await studentApi.importStudents(StudentsToSave);
+      const result = response.data ? response.data : response;
+      if(result.success){
+        toast.success(`Nhập thành công ${result.count} học sinh`);
+        axiosGetStudent();
+      }
+    }catch(err){
+      console.log("err")
+      toast.error("Có xảy ra lỗi")
+    }
+  };
 
 const renderRow = (item:Student)=>(
   <tr key={item.id} className='border-b border-gray-300 even:bg-state-50 text-sm hover:bg-purple-50'>
@@ -204,7 +232,12 @@ const renderRow = (item:Student)=>(
           <Search onSearch={(value)=>setFirstSearch(value)}/>
           <div className='flex items-center gap-4'>
                         <IoFilter className=' w-7 h-7 rounded-full flex items-center justify-center cursor-pointer  bg-amber-300 p-2'/>
-
+                        <ImportStudent onImportSucces={handleImportExcel} />
+                        <ExportStudents
+                          currentStudents={listStudent}
+                          searchQuery={firstSearch}
+                          sortOption={sort}
+                        />
                         <FaSortAmountDown className={` w-7 h-7 rounded-full flex items-center justify-center cursor-pointer bg-amber-300 p-2 ${sort==="name-desc"?"rotate-180 bg-red-500":""}`} onClick={()=>setSort(sort === "name-asc" ? "name-desc" : "name-asc")}/>
 
                         <IoIosAddCircleOutline className=' w-7 h-7 rounded-full flex items-center justify-center cursor-pointer  bg-amber-300 p-2 ' onClick={()=>setIsOpen(true)}/>
@@ -251,6 +284,7 @@ const renderRow = (item:Student)=>(
       onUpdate={handelUpdate}
       student={editingStudent}
       />
+      
     </div>
 
   )

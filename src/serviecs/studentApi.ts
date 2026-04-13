@@ -29,5 +29,8 @@ export const studentApi = {
     },
     getStudentPage: async (page:number,limit:number,search:string,sort:string)=>{
         return axiosClient.get(`/api/student?page=${page}&limit=${limit}&search=${search}&sort=${sort}`)
+    },
+    importStudents: async (data:any[])=>{
+        return  axiosClient.post(`/api/student/import`,data)
     }
 }
